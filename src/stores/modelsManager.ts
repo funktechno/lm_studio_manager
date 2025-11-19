@@ -1,13 +1,14 @@
 import { reactive, readonly } from "vue";
-import { LLM, LMStudioClient, ModelInfo } from "@lmstudio/sdk";
+import { LLM, LLMInstanceInfo, LMStudioClient, ModelInfo } from "@lmstudio/sdk";
 const client = new LMStudioClient({
-  baseUrl: "ws://localhost:1250",
+  baseUrl: import.meta.env.VITE_LMSTUDIO_BASEURL || "ws://localhost:1250",
 });
 
 // Basic, small wrapper store for model management
 type LoadedModel = {
   key: string;
   handle: LLM;
+  info?: LLMInstanceInfo;
 };
 
 // const client = createClient ? createClient({}) : ({} as any)
@@ -31,22 +32,30 @@ export async function listLoaded() {
   if (!client.llm?.listLoaded) return [];
   const loaded: LLM[] = await client.llm.listLoaded();
   // Expect loaded to be an array of { key, handle }
-  state.loadedModels = (loaded || []).map((m) => ({
-    key: m.identifier,
-    handle: m,
-  }));
+  state.loadedModels = await Promise.all(
+    (loaded || []).map(async (m) => ({
+      key: m.identifier,
+      handle: m,
+      info:
+        typeof m.getModelInfo === "function" ? await m.getModelInfo() : null,
+    }))
+  );
   return state.loadedModels;
 }
 
 export async function unloadModel(handle: LLM) {
   if (!handle) return;
   if (handle.unload) {
-    await handle.unload();
+    // Remove from state
+    state.loadedModels = state.loadedModels.filter(
+      (m) => m.key !== handle.identifier
+    );
+    try {
+      await handle.unload();
+    } catch (error) {
+      // ignore errors
+    }
   }
-  // Remove from state
-  state.loadedModels = state.loadedModels.filter(
-    (m) => m.key !== handle.identifier
-  );
 }
 
 export async function loadModel(key: string) {
@@ -60,12 +69,14 @@ export async function loadModel(key: string) {
   try {
     handle = await client.llm.model(key, {
       onProgress: (progress) => {
-        console.log(`Loading ${key}: ${progress}%`);
-        state.loadingProgress = progress;
+        // console.log(`Loading ${key}: ${progress}%`);
+        state.loadingProgress = Number.parseFloat((progress * 100).toFixed(2));
       },
     });
-
-    // const handle = await client.llm.model(key)
+    const info =
+      typeof handle.getModelInfo === "function"
+        ? await handle.getModelInfo()
+        : null;
 
     // If the handle offers progress events, listen to them.
     // if (handle && handle.on && typeof handle.on === 'function') {
@@ -92,7 +103,7 @@ export async function loadModel(key: string) {
     const exists = state.loadedModels.find(
       (m) => m.handle === handle || m.key === key
     );
-    if (!exists) state.loadedModels.push({ key, handle });
+    if (!exists) state.loadedModels.push({ key, handle, info });
   } catch (error) {
     //
   }

@@ -94,6 +94,7 @@ describe('ModelsManager store', () => {
     await nextTick()
 
     // expect(state.loading).toBe(false)
+    // expect(state.loadedModels).toBe({})
     expect(state.loadedModels.find(m => m.key === 'new-model')).toBeDefined()
     expect(state.loadingProgress).toBe(100)
   })

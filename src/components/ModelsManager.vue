@@ -5,12 +5,12 @@
         style="padding:8px 10px;border-radius:6px;border:1px solid #ccc;background:#fff;min-width:280px;">
         <option value="">-- Select downloaded model --</option>
         <option v-for="model in downloadedModels" :key="model.modelKey" :value="model.modelKey">
-          {{ model.displayName }}<br>
+          {{ model.displayName }}
           <!-- Key: {{ model.modelKey }}<br> -->
           <!-- Format: {{ model.format }}<br> -->
-          Size: {{ (model.sizeBytes / (1024 * 1024)).toFixed(2) }} MB<br>
-          <span v-if="model.paramsString"> Params: {{ model.paramsString }}<br></span>
-          Context: {{ new Intl.NumberFormat().format(model.maxContextLength) }} tokens<br>
+          Size: {{ (model.sizeBytes / (1024 * 1024)).toFixed(2) }} MB
+          <span v-if="model.paramsString"> Params: {{ model.paramsString }}</span>
+          Context: {{ new Intl.NumberFormat().format(model.maxContextLength) }} tokens
           <!-- <span v-if="model.architecture"> Arch: {{ model.architecture }}<br></span> -->
           <!-- <span v-if="model.quantization"> Quant: {{ model.quantization }}<br></span> -->
         </option>

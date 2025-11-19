@@ -1,6 +1,10 @@
 <template>
   <section>
     <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
+      <select v-model="selectedModel" @change="updateNewKey">
+        <option value="">-- Select downloaded model --</option>
+        <option v-for="model in downloadedModels" :key="model.modelKey" :value="model.modelKey">{{ model.modelKey }}</option>
+      </select>
       <input v-model="newKey" placeholder="Enter model key to load" />
       <button @click="onLoad" :disabled="loading">Load model</button>
       <button @click="refresh">Refresh list</button>
@@ -24,15 +28,22 @@ import { ref, computed } from 'vue'
 import { useModelsState } from '../stores/modelsManager'
 
 const newKey = ref('')
-const { state, listLoaded, loadModel, unloadModel } = useModelsState()
+const selectedModel = ref('')
+const { state, listLoaded, getDownloadedModels, loadModel, unloadModel } = useModelsState()
 
 const loadedModels = computed(() => state.loadedModels)
+const downloadedModels = computed(() => state.downloadedModels)
 const loading = computed(() => state.loading)
 const loadingProgress = computed(() => state.loadingProgress)
 const loadingKey = computed(() => state.loadingKey)
 
 async function refresh() {
   await listLoaded()
+  await getDownloadedModels()
+}
+
+function updateNewKey() {
+  newKey.value = selectedModel.value
 }
 
 async function onUnload(model: any) {
@@ -40,7 +51,8 @@ async function onUnload(model: any) {
 }
 
 async function onLoad() {
-  if (!newKey.value) return
+  const keyToLoad = selectedModel.value || newKey.value
+  if (!keyToLoad) return
   await loadModel(newKey.value)
   newKey.value = ''
 }

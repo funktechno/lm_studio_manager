@@ -1,7 +1,9 @@
 import { reactive, readonly } from "vue";
 import { LLM, LLMInstanceInfo, LMStudioClient, ModelInfo } from "@lmstudio/sdk";
+const scheme = location.protocol === "https:" ? "wss" : "ws";
+
 const client = new LMStudioClient({
-  baseUrl: import.meta.env.VITE_LMSTUDIO_BASEURL || "ws://localhost:1250",
+  baseUrl: `${scheme}://${location.host}/manage`,
 });
 
 // Basic, small wrapper store for model management

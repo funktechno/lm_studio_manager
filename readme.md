@@ -21,7 +21,7 @@ This project sets up a web interface for managing LM Studio models, with an Ngin
 1. **Clone the Repository**:
    ```bash
    git clone https://github.com/funktechno/lm_studio_manager.git
-   cd lm-studio-model-manager
+   cd lm_studio_manager
    ```
 
 2. **Create `.htpasswd` File (for Authentication)**:

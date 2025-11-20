@@ -1,0 +1,30 @@
+server {
+    listen 1234;
+
+    location /manage {
+        # Basic Auth check
+        auth_basic           "Restricted Area";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+
+        # Proxy to Vue dev server on port 5173
+        proxy_pass http://host.docker.internal:5173;
+
+        # Enable WebSocket proxying
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location / {
+        if ($http_authorization != "Bearer ${API_SECRET_KEY}") {
+            return 401;
+        }
+
+        proxy_pass http://host.docker.internal:1250;
+
+        # Enable WebSocket proxying
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
